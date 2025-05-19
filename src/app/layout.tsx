@@ -1,0 +1,27 @@
+import AppProviders from "@/components/providers/AppProviders";
+import React from "react";
+import "./globals.css";
+
+export const metadata = {
+  title: 'Canteen Tracker App', // Your website title
+  description: 'Track canteen attendance and manage meals easily.', // Your website description
+  icons: {
+    icon: '/favicon.ico',
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body suppressHydrationWarning>
+        <AppProviders>
+          {children}
+        </AppProviders>
+      </body>
+    </html>
+  );
+} 
