@@ -2,17 +2,14 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
+  const id = params.id;
   try {
     const client = await clientPromise;
     const db = client.db("canteen-tracker-app");
-    const userId = params.id;
     const updateData = await request.json();
 
-    if (!userId) {
+    if (!id) {
       return NextResponse.json(
         { error: 'User ID is required' },
         { status: 400 }
@@ -26,7 +23,7 @@ export async function PUT(
       await session.withTransaction(async () => {
         // First get the current user
         const currentUser = await db.collection("users").findOne(
-          { _id: new ObjectId(userId) }
+          { _id: new ObjectId(id) }
         );
 
         if (!currentUser) {
@@ -40,7 +37,7 @@ export async function PUT(
 
         // Update user
         const result = await db.collection("users").updateOne(
-          { _id: new ObjectId(userId) },
+          { _id: new ObjectId(id) },
           { $set: updateData }
         );
 
@@ -64,7 +61,7 @@ export async function PUT(
         }
       });
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, id });
     } catch (error) {
       throw error;
     } finally {
