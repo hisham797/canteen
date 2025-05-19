@@ -109,4 +109,10 @@ export async function DELETE(request: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function PATCH(request: Request) {
+  const { id, ...data } = await request.json();
+  // Your PATCH logic here
+  return NextResponse.json({ message: "PATCH message", id, data });
 } 
