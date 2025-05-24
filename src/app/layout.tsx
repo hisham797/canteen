@@ -1,6 +1,7 @@
 import AppProviders from "@/components/providers/AppProviders";
-import React from "react";
+import React, { Suspense } from "react";
 import "./globals.css";
+import Loading from "./loading";
 
 export const metadata = {
   title: 'Canteen Tracker App', // Your website title
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning>
         <AppProviders>
-          {children}
+          <Suspense fallback={<Loading />}>
+            {children}
+          </Suspense>
         </AppProviders>
       </body>
     </html>

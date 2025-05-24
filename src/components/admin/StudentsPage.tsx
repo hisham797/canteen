@@ -16,7 +16,7 @@ interface Student {
   firstName: string;
   lastName: string;
   admissionNumber: string;
-  class: '8' | 'P1' | 'P2' | 'D1' | 'D2' | 'D3';
+  class: '8' | '9' | 'P1' | 'P2' | 'D1' | 'D2' | 'D3' | 'PG 1';
   tableNumber: number;
   isPresent: boolean;
 }
@@ -37,7 +37,7 @@ const StudentsPage = () => {
     isPresent: false
   });
 
-  const AVAILABLE_CLASSES = ['8', 'P1', 'P2', 'D1', 'D2', 'D3'];
+  const AVAILABLE_CLASSES = ['8','9', 'P1', 'P2', 'D1', 'D2', 'D3','PG 1'];
 
   // Fetch students on component mount
   useEffect(() => {
@@ -406,9 +406,7 @@ const StudentsPage = () => {
               <Label htmlFor="newTableNumber">Table Number</Label>
               <Input
                 id="newTableNumber"
-                type="number"
-                min="1"
-                max="8"
+                type="number"       
                 value={newStudent.tableNumber}
                 onChange={(e) => setNewStudent({...newStudent, tableNumber: parseInt(e.target.value) || 1})}
               />
