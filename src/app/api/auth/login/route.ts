@@ -9,7 +9,10 @@ export async function POST(request: Request) {
     const { admissionNumber, password } = await request.json();
 
     // Check if it's an admin login
-    if (admissionNumber === 'shaz80170@gmail.com' && password === '871459') {
+    if (
+      admissionNumber === process.env.ADMIN_EMAIL &&
+      password === process.env.ADMIN_PASSWORD
+    ) {
       return NextResponse.json({
         success: true,
         user: {
@@ -54,4 +57,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}
