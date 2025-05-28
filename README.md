@@ -1,110 +1,65 @@
-
 # 🍽️ Canteen Tracker App
 
-A modern and responsive web application built using **Next.js** to manage and track canteen orders efficiently. This app helps users place orders, receive real-time updates, and get notified via email using Resend API.
+## Overview
+Canteen Tracker App is a web application designed to manage and track canteen activities, including user authentication, attendance, messaging, and reporting. Built with Next.js, MongoDB, and Tailwind CSS, it provides a modern and efficient interface for both admins and users.
 
-## 🧩 Mokup
+## Features
+- User authentication (login, signup, password reset)
+- Admin dashboard for managing users, students, and settings
+- Attendance tracking
+- Messaging system
+- User profile management
+- Secure password handling with bcrypt
+- Responsive and modern UI with Tailwind CSS
 
-  ![Image](https://github.com/hisham797/canteen/blob/f559862d62a8c9859cb10e53d41def4ad9f425fe/canteen-mokup.png)
+## Getting Started
 
+### Prerequisites
+- Node.js (v16 or above recommended)
+- npm or yarn
+- MongoDB instance (local or cloud)
 
+### Installation
+1. Clone the repository:
+   ```sh
+   git clone <your-repo-url>
+   cd canteen
+   ```
+2. Install dependencies:
+   ```sh
+   npm install
+   # or
+   yarn install
+   ```
+3. Create a `.env.local` file in the root directory and add the following variables:
 
-##  🚀 Features
-- **Fully Static and Dynamic Routes**: Powered by Next.js routing system
-
-- **Responsive**: Optimized for mobile, tablet, and desktop
-
-- **Email Notifications**: Integrated with Resend API for real-time updates
-
-- **Easily Updatable**: All content and code updates are handled through GitHub  
-
-  
-##  ✏️ Edit a File Directly in GitHub
-
-- Navigate to the **desired file(s)** in your repository
-
-- Click the **"Edit" button** (pencil icon) at the top right of the file view
-
-- Make your changes and **commit** them directly from the browser  
-
-   
-
-##  💻 Use GitHub Codespaces
-
-
-
-- **Go to the main page of your repository**
-
-- **Click the "Code" button (green button) near the top right**
-
-- **Select the "Codespaces" tab**
-
-- **Click "New codespace" to launch a fresh development environment**
-
-- **Edit files directly within Codespace and commit & push your changes when you're done**
-
-     
-
-##  🛠️ What Technologies Are Used for This Project? 
-This project is built with:
-
-
-
-   - **Next.js** – React framework for production-ready web apps
-
-- **TypeScript** – Typed JavaScript
-  
-- **Tailwind CSS** – Utility-first CSS framework
-  
-- **shadcn/ui** – Elegant UI components
-  
-- **Node.js** – Backend runtime environment
-  
-- **Resend Email API** – For sending email notifications  
-
-
-
-
-
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-## 📦 Installation
-
-1.Clone the repository :
-
-     https://github.com/hisham797/BSNL.gitg](https://github.com/hisham797/canteen.git
-    
-2.Install dependencies:
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
+### Sample `.env.local`
+```env
+MONGODB_URI=mongodb://localhost:27017/canteen
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=password
 ```
 
-
- 3.Run the development server:
- 
-  ```bash
+### Running the App
+```sh
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
 ```
 
+The app will be available at [http://localhost:3000](http://localhost:3000).
+
+## Project Structure
+- `src/app/` - Main application pages and API routes
+- `src/components/` - Reusable UI and feature components
+- `src/lib/` - Database and utility libraries
+- `src/types/` - TypeScript type definitions
+- `public/` - Static assets
+
+## License
+This project is licensed under the MIT License.
 
 
-## 🚀 Available Scripts
-
-- `npm run dev` : Start development server  
-- `npm run build` : Build the application for production  
-- `npm run preview` : Start the production server  
-- `npm run lint` : Run ESLint
-
-  
 
 
 
