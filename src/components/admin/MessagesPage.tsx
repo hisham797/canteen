@@ -62,7 +62,7 @@ const MessagesPage = () => {
     // Only update status if message is unread
     if (message.status === 'unread') {
       try {
-        const response = await fetch(`/api/messages/${message._id}`, {
+        const response = await fetch(`/api/messages?id=${message._id}`, {
           method: 'PATCH',
         });
 

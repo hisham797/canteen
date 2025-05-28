@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
+import { ObjectId } from 'mongodb';
 
 interface Message {
   _id: string;
@@ -92,7 +93,7 @@ export async function DELETE(request: Request) {
     }
 
     const db = await connectToDatabase();
-    const result = await db.collection('messages').deleteOne({ _id: id });
+    const result = await db.collection('messages').deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
       return NextResponse.json(
@@ -112,7 +113,36 @@ export async function DELETE(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const { id, ...data } = await request.json();
-  // Your PATCH logic here
-  return NextResponse.json({ message: "PATCH message", id, data });
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Message ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const db = await connectToDatabase();
+    const result = await db.collection('messages').updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: 'read' } }
+    );
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { error: 'Message not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating message:', error);
+    return NextResponse.json(
+      { error: 'Failed to update message' },
+      { status: 500 }
+    );
+  }
 } 

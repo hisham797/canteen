@@ -13,6 +13,8 @@ interface User {
   admissionNumber: string;
   fullName: string;
   role: string;
+  email: string;
+  class: string;
   attendance: {
     coffee: boolean;
     breakfast: boolean;

@@ -23,18 +23,11 @@ export const exportToCSV = (data: any[], filename: string) => {
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
-  
-  // Check if the browser is IE
-  if (typeof navigator.msSaveBlob !== 'undefined') {
-    // IE 10+
-    navigator.msSaveBlob(blob, filename);
-  } else {
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 export const exportToPDF = (data: any[], filename: string, title: string) => {

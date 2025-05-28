@@ -167,7 +167,6 @@ const StudentsPage = () => {
       'Admission Number': student.admissionNumber,
       'Class': student.class,
       'Table Number': student.tableNumber,
-      'Status': student.isPresent ? 'Present' : 'Absent'
     }));
     
     exportToCSV(exportData, 'students.csv');
@@ -180,8 +179,7 @@ const StudentsPage = () => {
       'Last Name': student.lastName,
       'Admission Number': student.admissionNumber,
       'Class': student.class,
-      'Table Number': student.tableNumber,
-      'Status': student.isPresent ? 'Present' : 'Absent'
+      'Table Number': student.tableNumber, 
     }));
     
     exportToPDF(exportData, 'students.pdf', 'Students Report');
@@ -240,29 +238,25 @@ const StudentsPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>NO</TableHead>
                   <TableHead>First Name</TableHead>
                   <TableHead>Last Name</TableHead>
                   <TableHead>Admission Number</TableHead>
                   <TableHead>Class</TableHead>
                   <TableHead>Table</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStudents.length > 0 ? (
-                  filteredStudents.map((student) => (
+                  filteredStudents.map((student, index) => (
                     <TableRow key={student._id}>
+                      <TableCell>{index + 1}</TableCell>
                       <TableCell>{student.firstName}</TableCell>
                       <TableCell>{student.lastName}</TableCell>
                       <TableCell>{student.admissionNumber}</TableCell>
                       <TableCell>{student.class}</TableCell>
                       <TableCell>Table {student.tableNumber}</TableCell>
-                      <TableCell>
-                        <span className={student.isPresent ? 'text-green-500' : 'text-blue-500 font-medium'}>
-                          {student.isPresent ? 'Present' : '------'}
-                        </span>
-                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button size="sm" variant="ghost" onClick={() => handleEditClick(student)}>

@@ -42,7 +42,7 @@ const UsersPage = () => {
     class: '8' as User['class'],
   });
 
-  const AVAILABLE_CLASSES = ['8', 'P1', 'P2', 'D1', 'D2', 'D3'];
+  const AVAILABLE_CLASSES = ['8','9', 'P1', 'P2', 'D1', 'D2', 'D3','PG1'];
 
   useEffect(() => {
     fetchUsers();
@@ -124,15 +124,24 @@ const UsersPage = () => {
     }
 
     try {
+      const userData = {
+        ...newUser,
+        password: '123456',
+        email: `${newUser.admissionNumber.toLowerCase()}@school.com`
+      };
+
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify(userData),
       });
 
-      if (!response.ok) throw new Error('Failed to create user');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create user');
+      }
 
       await fetchUsers();
       setIsAddDialogOpen(false);
@@ -144,7 +153,8 @@ const UsersPage = () => {
       });
       toast.success('User added successfully');
     } catch (error) {
-      toast.error('Failed to create user');
+      const message = error instanceof Error ? error.message : 'Failed to create user';
+      toast.error(message);
       console.error('Error creating user:', error);
     }
   };
@@ -177,8 +187,7 @@ const UsersPage = () => {
       'Email': user.email,
       'Admission Number': user.admissionNumber,
       'Role': user.role,
-      'Class': user.class,
-      'Status': user.attendance.coffee ? 'Present' : 'Absent'
+      'Class': user.class
     }));
     
     exportToCSV(exportData, 'users.csv');
@@ -192,8 +201,7 @@ const UsersPage = () => {
       'Email': user.email,
       'Admission Number': user.admissionNumber,
       'Role': user.role,
-      'Class': user.class,
-      'Status': user.attendance.coffee ? 'Present' : 'Absent'
+      'Class': user.class
     }));
     
     exportToPDF(exportData, 'users.pdf', 'Users Report');
@@ -256,6 +264,7 @@ const UsersPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>NO</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Admission Number</TableHead>
                   <TableHead>Email</TableHead>
@@ -266,8 +275,9 @@ const UsersPage = () => {
               </TableHeader>
               <TableBody>
                 {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
+                  filteredUsers.map((user, index) => (
                     <TableRow key={user._id}>
+                      <TableCell>{index + 1}</TableCell>
                       <TableCell>{user.fullName}</TableCell>
                       <TableCell>{user.admissionNumber}</TableCell>
                       <TableCell>{user.email}</TableCell>
@@ -303,7 +313,7 @@ const UsersPage = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
                       No users found
                     </TableCell>
                   </TableRow>

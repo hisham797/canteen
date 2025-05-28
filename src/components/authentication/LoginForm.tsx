@@ -65,18 +65,18 @@ const LoginForm = () => {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Login</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
+        <CardDescription className='text-center'>
           Enter your admission number and password to access your account
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="admissionNumber">Admission Number / Email</Label>
+            <Label htmlFor="admissionNumber">Admission Number</Label>
             <Input
               id="admissionNumber"
-              placeholder="Enter your admission number or email"
+              placeholder="Enter your admission number"
               value={admissionNumber}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAdmissionNumber(e.target.value)}
               required
