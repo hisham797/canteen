@@ -82,7 +82,7 @@ const Navbar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem disabled className="font-medium">
-                    {user.fullName || user.admissionNumber || 'User'}
+                    {user.fullName || user.admissionNumber || 'Admin'}
                   </DropdownMenuItem>
                   {user.role === 'admin' ? (
                     <DropdownMenuItem onClick={() => router.push('/admin/dashboard')} className="cursor-pointer">

@@ -28,7 +28,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error }, { status: 400 });
     }
     
-    const db = await connectToDatabase();
+    const client = await clientPromise;
+    const db = client.db("canteen-tracker-app");
     
     // Check if student already exists
     const existingStudent = await db.collection('students').findOne({

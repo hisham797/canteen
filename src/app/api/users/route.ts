@@ -3,13 +3,34 @@ import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 
-// Add default attendance object
+interface Attendance {
+  present: boolean;
+  sick?: boolean;
+  sickReason?: string;
+}
+
+interface User {
+  admissionNumber: string;
+  fullName: string;
+  email: string;
+  role: string;
+  class: string;
+  attendance: {
+    coffee: Attendance;
+    breakfast: Attendance;
+    lunch: Attendance;
+    tea: Attendance;
+    dinner: Attendance;
+  };
+}
+
+// Default attendance object
 const defaultAttendance = {
-  coffee: true,
-  breakfast: true,
-  lunch: true,
-  tea: true,
-  dinner: true
+  coffee: { present: true, sick: false, sickReason: '' },
+  breakfast: { present: true, sick: false, sickReason: '' },
+  lunch: { present: true, sick: false, sickReason: '' },
+  tea: { present: true, sick: false, sickReason: '' },
+  dinner: { present: true, sick: false, sickReason: '' }
 };
 
 export async function POST(request: Request) {
@@ -111,17 +132,41 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const client = await clientPromise;
-    const db = client.db("canteen-tracker-app");
     const { admissionNumber, attendance } = await request.json();
-
-    const result = await db.collection("users").updateOne(
+    const db = await clientPromise;
+    
+    // Update user attendance
+    const result = await db.db("canteen-tracker-app").collection('users').updateOne(
       { admissionNumber },
-      { $set: { attendance } }
+      { 
+        $set: { 
+          attendance,
+          lastUpdated: new Date()
+        } 
+      }
     );
 
-    return NextResponse.json(result);
+    if (!result.matchedCount) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Also update the student's attendance
+    await db.db("canteen-tracker-app").collection('students').updateOne(
+      { admissionNumber },
+      { 
+        $set: { 
+          attendance,
+          lastUpdated: new Date()
+        } 
+      }
+    );
+
+    return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Error updating attendance:', error);
     return NextResponse.json(
       { error: 'Failed to update attendance' },
       { status: 500 }

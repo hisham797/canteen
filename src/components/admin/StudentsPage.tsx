@@ -127,14 +127,26 @@ const StudentsPage = () => {
         body: JSON.stringify(newStudent),
       });
 
-      if (!response.ok) throw new Error('Failed to create student');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create student');
+      }
 
       await fetchStudents();
       setIsAddDialogOpen(false);
-      setNewStudent({ firstName: '', lastName: '', admissionNumber: '', class: '8', tableNumber: 1, isPresent: false });
+      setNewStudent({ 
+        firstName: '', 
+        lastName: '', 
+        admissionNumber: '', 
+        class: '8', 
+        tableNumber: 1, 
+        isPresent: false 
+      });
       toast.success('Student added successfully');
     } catch (error) {
-      toast.error('Failed to create student');
+      const message = error instanceof Error ? error.message : 'Failed to create student';
+      toast.error(message);
       console.error('Error creating student:', error);
     }
   };

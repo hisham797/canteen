@@ -8,24 +8,34 @@ interface Student {
   firstName: string;
   lastName: string;
   admissionNumber: string;
+  class: string;
 }
 
 interface User {
   _id: string;
   admissionNumber: string;
-  attendance?: Record<MealType, boolean>;
+  attendance?: Record<MealType, {
+    present: boolean;
+    sick?: boolean;
+    sickReason?: string;
+  }>;
 }
 
 interface StudentInfo {
   id: string;
   name: string;
+  class: string;
+  admissionNumber: string;
+  sickReason?: string;
 }
 
 interface MealSummary {
   present: number;
   absent: number;
+  sick: number;
   presentStudents: StudentInfo[];
   absentStudents: StudentInfo[];
+  sickStudents: StudentInfo[];
 }
 
 type AttendanceSummary = Record<MealType, MealSummary>;
@@ -40,11 +50,11 @@ export async function GET() {
 
     // Initialize summary structure
     const summary: AttendanceSummary = {
-      coffee: { present: totalStudents, absent: 0, presentStudents: [], absentStudents: [] },
-      breakfast: { present: totalStudents, absent: 0, presentStudents: [], absentStudents: [] },
-      lunch: { present: totalStudents, absent: 0, presentStudents: [], absentStudents: [] },
-      tea: { present: totalStudents, absent: 0, presentStudents: [], absentStudents: [] },
-      dinner: { present: totalStudents, absent: 0, presentStudents: [], absentStudents: [] }
+      coffee: { present: 0, absent: 0, sick: 0, presentStudents: [], absentStudents: [], sickStudents: [] },
+      breakfast: { present: 0, absent: 0, sick: 0, presentStudents: [], absentStudents: [], sickStudents: [] },
+      lunch: { present: 0, absent: 0, sick: 0, presentStudents: [], absentStudents: [], sickStudents: [] },
+      tea: { present: 0, absent: 0, sick: 0, presentStudents: [], absentStudents: [], sickStudents: [] },
+      dinner: { present: 0, absent: 0, sick: 0, presentStudents: [], absentStudents: [], sickStudents: [] }
     };
 
     // Get all users with attendance records
@@ -53,32 +63,39 @@ export async function GET() {
     // Process each meal's attendance
     const meals: MealType[] = ['coffee', 'breakfast', 'lunch', 'tea', 'dinner'];
     
-    meals.forEach(meal => {
-      summary[meal].presentStudents = students.map(student => ({
+    // First, process all students and their attendance
+    students.forEach(student => {
+      const studentInfo: StudentInfo = {
         id: student._id.toString(),
-        name: `${student.firstName} ${student.lastName}`
-      }));
+        name: `${student.firstName} ${student.lastName}`,
+        class: student.class,
+        admissionNumber: student.admissionNumber
+      };
 
-      // Update counts based on actual attendance records
-      users.forEach(user => {
-        if (user.attendance && user.attendance[meal] === false) {
-          // Find corresponding student
-          const student = students.find(s => s.admissionNumber === user.admissionNumber);
-          if (student) {
-            summary[meal].present--;
-            summary[meal].absent++;
-            
-            // Move student from present to absent list
-            const studentInfo: StudentInfo = {
-              id: student._id.toString(),
-              name: `${student.firstName} ${student.lastName}`
-            };
-            
-            summary[meal].presentStudents = summary[meal].presentStudents.filter(
-              (s: StudentInfo) => s.id !== studentInfo.id
-            );
+      // Find user record for this student
+      const user = users.find(u => u.admissionNumber === student.admissionNumber);
+      
+      // Process each meal for this student
+      meals.forEach(meal => {
+        if (user?.attendance?.[meal]) {
+          if (user.attendance[meal].sick) {
+            // Student is sick for this meal
+            const sickInfo = { ...studentInfo, sickReason: user.attendance[meal].sickReason };
+            summary[meal].sickStudents.push(sickInfo);
+            summary[meal].sick++;
+          } else if (!user.attendance[meal].present) {
+            // Student is absent for this meal
             summary[meal].absentStudents.push(studentInfo);
+            summary[meal].absent++;
+          } else {
+            // Student is present for this meal
+            summary[meal].presentStudents.push(studentInfo);
+            summary[meal].present++;
           }
+        } else {
+          // No attendance record found, count as present
+          summary[meal].presentStudents.push(studentInfo);
+          summary[meal].present++;
         }
       });
     });

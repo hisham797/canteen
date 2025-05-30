@@ -105,20 +105,20 @@ const Messages = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">support@canteentracker.com</p>
+                  <p className="font-medium">dawaacademy@gmail.com</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium">+1 (555) 123-4567</p>
+                  <p className="font-medium">+251 911 123 456</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Address</p>
-                  <p className="font-medium">123 Campus Drive,<br />Education City, IN 45678</p>
+                  <p className="font-medium">Akkode Islamic Center,<br />Dawa Academy</p>
                 </div>
-                <div>
+                {/* <div>
                   <p className="text-sm text-gray-500">Hours</p>
                   <p className="font-medium">Monday-Friday: 8am - 5pm<br />Saturday-Sunday: Closed</p>
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>
