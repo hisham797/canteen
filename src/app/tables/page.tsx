@@ -61,7 +61,6 @@ const Tables = () => {
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
   const [attendanceSummary, setAttendanceSummary] = useState<AttendanceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSendingReport, setIsSendingReport] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [selectedMealDetails, setSelectedMealDetails] = useState<{
@@ -109,28 +108,6 @@ const Tables = () => {
     setIsModalOpen(false);
     // Refresh attendance data when modal is closed
     fetchAttendanceSummary();
-  };
-
-  const handleSendReport = async () => {
-    setIsSendingReport(true);
-    try {
-      const response = await fetch('/api/send-report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ attendanceSummary }),
-      });
-
-      if (!response.ok) throw new Error('Failed to send report');
-
-      toast.success('Report sent successfully!');
-    } catch (error) {
-      console.error('Error sending report:', error);
-      toast.error('Failed to send report');
-    } finally {
-      setIsSendingReport(false);
-    }
   };
 
   const handleMealClick = (mealName: string, type: 'present' | 'absent' | 'sick', students: Student[]) => {
@@ -247,26 +224,6 @@ const Tables = () => {
                   {isDataHidden ? 'Show Data' : 'Hide Data'}
                 </Label>
               </div>
-            )}
-            
-            {!isDataHidden && isAdmin && (
-              <Button 
-                variant="outline" 
-                onClick={handleSendReport}
-                disabled={isSendingReport}
-              >
-                {isSendingReport ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <Mail className="mr-2 h-4 w-4" />
-                    Send Report
-                  </>
-                )}
-              </Button>
             )}
 
             {!isDataHidden && (
