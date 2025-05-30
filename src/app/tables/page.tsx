@@ -11,6 +11,8 @@ import { Coffee, Egg, Sandwich, CupSoda, Utensils, Loader2, Mail } from 'lucide-
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Define meal times and their corresponding icons
 const mealTimes = [
@@ -66,6 +68,12 @@ const Tables = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSendingReport, setIsSendingReport] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [selectedMealDetails, setSelectedMealDetails] = useState<{
+    meal: string;
+    type: 'present' | 'absent';
+    students: Array<{ id: string; name: string }>;
+  } | null>(null);
   
   useEffect(() => {
     fetchAttendanceSummary();
@@ -122,6 +130,15 @@ const Tables = () => {
     } finally {
       setIsSendingReport(false);
     }
+  };
+
+  const handleMealClick = (meal: string, type: 'present' | 'absent', students: Array<{ id: string; name: string }>) => {
+    setSelectedMealDetails({
+      meal,
+      type,
+      students
+    });
+    setIsDetailsDialogOpen(true);
   };
 
   return (
@@ -207,18 +224,14 @@ const Tables = () => {
                   return (
                     <div 
                       key={`present-${meal.id}`}
-                      className={`flex flex-col items-center p-2 rounded-lg ${selectedMeal === meal.id ? 'bg-green-200' : ''}`}
+                      className={`flex flex-col items-center p-2 rounded-lg cursor-pointer hover:bg-green-100 transition-colors ${selectedMeal === meal.id ? 'bg-green-200' : ''}`}
+                      onClick={() => handleMealClick(meal.label, 'present', presentStudents)}
                     >
                       <meal.icon className="h-5 w-5 text-green-600 mb-1" />
                       <Badge variant="secondary" className="bg-green-100 text-green-800">
                         {presentCount}
                       </Badge>
                       <span className="text-xs mt-1">{meal.label}</span>
-                        <div className="hidden">
-                          {presentStudents.map(student => (
-                            <span key={student.id}>{getFirstLetter(student.name)}</span>
-                          ))}
-                        </div>
                     </div>
                   );
                 })}
@@ -243,18 +256,14 @@ const Tables = () => {
                   return (
                     <div 
                       key={`absent-${meal.id}`}
-                      className={`flex flex-col items-center p-2 rounded-lg ${selectedMeal === meal.id ? 'bg-red-200' : ''}`}
+                      className={`flex flex-col items-center p-2 rounded-lg cursor-pointer hover:bg-red-100 transition-colors ${selectedMeal === meal.id ? 'bg-red-200' : ''}`}
+                      onClick={() => handleMealClick(meal.label, 'absent', absentStudents)}
                     >
                       <meal.icon className="h-5 w-5 text-red-600 mb-1" />
                       <Badge variant="secondary" className="bg-red-100 text-red-800">
                         {absentCount}
                       </Badge>
                       <span className="text-xs mt-1">{meal.label}</span>
-                        <div className="hidden">
-                          {absentStudents.map(student => (
-                            <span key={student.id}>{getFirstLetter(student.name)}</span>
-                          ))}
-                        </div>
                     </div>
                   );
                 })}
@@ -270,6 +279,36 @@ const Tables = () => {
           isOpen={isModalOpen} 
           onClose={handleCloseModal} 
         />
+
+        {/* Student Details Dialog */}
+        <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedMealDetails?.meal} - {selectedMealDetails?.type === 'present' ? 'Present' : 'Absent'} Students
+              </DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="h-[300px] pr-4">
+              <div className="space-y-2">
+                {selectedMealDetails?.students.map((student) => (
+                  <div 
+                    key={student.id}
+                    className={`p-3 rounded-lg border ${
+                      selectedMealDetails.type === 'present' ? 'bg-green-50' : 'bg-red-50'
+                    }`}
+                  >
+                    <div className="font-medium">{student.name}</div>
+                  </div>
+                ))}
+                {selectedMealDetails?.students.length === 0 && (
+                  <div className="text-center p-4 text-gray-500">
+                    No students found
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </div>

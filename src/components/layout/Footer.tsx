@@ -47,7 +47,7 @@ const Footer = () => {
         <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-600">© {new Date().getFullYear()} CanteenTracker. All rights reserved.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
-            <p>developed by <a href="https://github.com/devarshi-k" className="text-gray-500 hover:text-canteen-blue">webtech ♥️</a></p>
+            <p>developed by <a href="https://github.com/muhammedshamilmt" className="text-gray-500 hover:text-canteen-blue">Muhammed Shamil MT ♥️</a></p>
             <a href="#" className="text-gray-500 hover:text-canteen-blue">
               <span className="sr-only">Twitter</span>
               <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
