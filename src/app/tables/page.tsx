@@ -374,7 +374,9 @@ const Tables = () => {
                               {presentCount}
                             </Badge>
                             <span className="text-xs mt-1">{meal.label}</span>
-                            
+                            <span className="text-xs text-gray-500 mt-1">
+                              Total: {campusTotal}
+                            </span>
                           </div>
                         );
                       })}

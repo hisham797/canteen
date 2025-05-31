@@ -11,6 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
@@ -87,17 +88,26 @@ const Navbar = () => {
                   <DropdownMenuItem disabled className="font-medium">
                     {user.fullName || user.admissionNumber || 'Admin'}
                   </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
                   {user.role === 'admin' ? (
-                    <DropdownMenuItem onClick={() => router.push('/admin/dashboard')} className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Admin Panel</span>
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem onClick={() => router.push('/admin/dashboard')} className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Admin Panel</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer">
+                        <UserRound className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                    </>
                   ) : (
                     <DropdownMenuItem onClick={() => router.push('/userprofile')} className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
+                      <UserRound className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Logout</span>
@@ -139,6 +149,9 @@ const Navbar = () => {
             <Link href="/" className="text-gray-700 hover:text-canteen-blue block px-3 py-2 rounded-md text-base font-medium">
               Home
             </Link>
+            <Link href="/overview" className="text-gray-700 hover:text-canteen-blue block px-3 py-2 rounded-md text-base font-medium">
+              Overview
+            </Link>
             <Link href="/tables" className="text-gray-700 hover:text-canteen-blue block px-3 py-2 rounded-md text-base font-medium">
               Tables
             </Link>
@@ -149,19 +162,21 @@ const Navbar = () => {
             
             {user ? (
               <>
-                {user.role === 'admin' ? (
-                  <Link href="/admin" className="text-gray-700 hover:text-canteen-blue block px-3 py-2 rounded-md text-base font-medium">
+                {user.role === 'admin' && (
+                  <Link href="/admin/dashboard" className="text-gray-700 hover:text-canteen-blue block px-3 py-2 rounded-md text-base font-medium">
+                    <Settings className="inline-block mr-1 w-4 h-4" />
                     Admin Panel
                   </Link>
-                ) : (
-                  <Link href="/userprofile" className="text-gray-700 hover:text-canteen-blue block px-3 py-2 rounded-md text-base font-medium">
-                    Profile
-                  </Link>
                 )}
+                <Link href="/userprofile" className="text-gray-700 hover:text-canteen-blue block px-3 py-2 rounded-md text-base font-medium">
+                  <UserRound className="inline-block mr-1 w-4 h-4" />
+                  Profile
+                </Link>
                 <a 
                   onClick={handleLogout} 
                   className="text-red-600 hover:text-red-800 block px-3 py-2 rounded-md text-base font-medium cursor-pointer"
                 >
+                  <LogOut className="inline-block mr-1 w-4 h-4" />
                   Logout
                 </a>
               </>

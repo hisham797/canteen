@@ -112,13 +112,11 @@ const TableGrid: React.FC<TableGridProps> = ({ onOpenTableDetails, selectedMeal,
   const cardVariants = {
     hidden: { 
       opacity: 0,
-      y: 20,
-      scale: 0.95
+      y: 20
     },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
         duration: 0.4,
         ease: "easeOut"
@@ -126,38 +124,17 @@ const TableGrid: React.FC<TableGridProps> = ({ onOpenTableDetails, selectedMeal,
     }
   };
 
-  const studentDotVariants = {
-    hidden: { scale: 0, opacity: 0 },
-    visible: (i: number) => ({
-      scale: 1,
-      opacity: 1,
-      transition: {
-        delay: i * 0.05,
-        duration: 0.3,
-        ease: "easeOut"
-      }
-    })
-  };
-
   if (isLoading) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center justify-center h-40"
-      >
-        <div className="text-gray-500">Loading tables...</div>
-      </motion.div>
-    );
+    return <div>Loading...</div>;
   }
 
   return (
-    <motion.div
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4 w-full"
+    <motion.div 
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: "-100px" }}
+      viewport={{ once: true, margin: "-50px" }}
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4 w-full"
     >
       {Array.from({ length: numberOfTables }, (_, i) => i + 1).map((tableNumber) => {
         let tableStudents = students[tableNumber.toString()] || [];
@@ -181,13 +158,14 @@ const TableGrid: React.FC<TableGridProps> = ({ onOpenTableDetails, selectedMeal,
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-1 mb-4">
-                  {tableStudents.map((student, index) => {
+                  {tableStudents.map((student) => {
                     const mealStatus = getMealStatus(student);
                     return (
                       <motion.div
                         key={student._id}
-                        custom={index}
-                        variants={studentDotVariants}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.2 }}
                         className={`w-6 h-6 flex items-center justify-center rounded-full transition-colors duration-200 ${
                           mealStatus === true
                               ? 'bg-green-500 text-white hover:bg-green-600' 
@@ -205,12 +183,7 @@ const TableGrid: React.FC<TableGridProps> = ({ onOpenTableDetails, selectedMeal,
                   })}
                 </div>
                 
-                <motion.div 
-                  className="flex justify-between text-sm mb-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
+                <div className="flex justify-between text-sm mb-4">
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
                     <span>
@@ -223,21 +196,15 @@ const TableGrid: React.FC<TableGridProps> = ({ onOpenTableDetails, selectedMeal,
                       {presence.absent} absent
                     </span>
                   </div>
-                </motion.div>
+                </div>
                 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => onOpenTableDetails(tableNumber.toString())}
                 >
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => onOpenTableDetails(tableNumber.toString())}
-                  >
-                    View Details
-                  </Button>
-                </motion.div>
+                  View Details
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
