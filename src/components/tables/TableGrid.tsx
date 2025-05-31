@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 interface TableGridProps {
   onOpenTableDetails: (tableId: string) => void;
   selectedMeal: string | null;
+  selectedCampus?: string;
 }
 
 interface Student {
@@ -22,6 +24,7 @@ interface Student {
     tea: boolean;
     dinner: boolean;
   };
+  campus: string;
 }
 
 // Add defaultAttendance constant at the top of the file after interfaces
@@ -33,7 +36,7 @@ const defaultAttendance = {
   dinner: false
 };
 
-const TableGrid: React.FC<TableGridProps> = ({ onOpenTableDetails, selectedMeal }) => {
+const TableGrid: React.FC<TableGridProps> = ({ onOpenTableDetails, selectedMeal, selectedCampus }) => {
   const [students, setStudents] = useState<{ [key: string]: Student[] }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [numberOfTables, setNumberOfTables] = useState(10); // Default to 10
@@ -77,7 +80,8 @@ const TableGrid: React.FC<TableGridProps> = ({ onOpenTableDetails, selectedMeal 
   // Get current meal status based on selectedMeal
   const getMealStatus = (student: Student) => {
     if (!selectedMeal) return null;
-    return (student.attendance || defaultAttendance)[selectedMeal.toLowerCase() as keyof typeof defaultAttendance];
+    const mealKey = selectedMeal.toLowerCase() as keyof typeof defaultAttendance;
+    return student.attendance?.[mealKey] ?? null;
   };
 
   // Calculate presence for a table
@@ -95,72 +99,151 @@ const TableGrid: React.FC<TableGridProps> = ({ onOpenTableDetails, selectedMeal 
     return { present, absent };
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { 
+      opacity: 0,
+      y: 20,
+      scale: 0.95
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const studentDotVariants = {
+    hidden: { scale: 0, opacity: 0 },
+    visible: (i: number) => ({
+      scale: 1,
+      opacity: 1,
+      transition: {
+        delay: i * 0.05,
+        duration: 0.3,
+        ease: "easeOut"
+      }
+    })
+  };
+
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-center justify-center h-40"
+      >
+        <div className="text-gray-500">Loading tables...</div>
+      </motion.div>
+    );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4 w-full">
+    <motion.div
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4 w-full"
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-100px" }}
+    >
       {Array.from({ length: numberOfTables }, (_, i) => i + 1).map((tableNumber) => {
-        const tableStudents = students[tableNumber.toString()] || [];
+        let tableStudents = students[tableNumber.toString()] || [];
+        if (selectedCampus && selectedCampus !== 'all') {
+          tableStudents = tableStudents.filter(s => s.campus === selectedCampus);
+        }
         const presence = calculatePresence(tableStudents);
 
         return (
-          <Card key={tableNumber} className="card-hover">
-            <CardHeader className="pb-2">
-              <CardTitle>Table {tableNumber}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-1 mb-4">
-                {tableStudents.map((student) => {
-                  const mealStatus = getMealStatus(student);
-                  return (
-                    <div
-                      key={student._id}
-                      className={`w-6 h-6 flex items-center justify-center rounded-full ${
-                        mealStatus === null 
-                          ? 'bg-gray-200 text-gray-600'
-                          : mealStatus 
-                            ? 'bg-green-500 text-white' 
-                            : 'bg-red-500 text-white'
-                      }`}
-                      title={`${student.fullName}: ${mealStatus === null ? 'Not checked' : mealStatus ? 'Present' : 'Absent'}`}
-                    >
-                      <span className="text-xs font-medium">
-                        {getFirstNameInitial(student.fullName)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <div className="flex justify-between text-sm mb-4">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
-                  <span>
-                    {presence.present} present
-                  </span>
+          <motion.div
+            key={tableNumber}
+            variants={cardVariants}
+            whileHover={{ 
+              scale: 1.02,
+              transition: { duration: 0.2 }
+            }}
+          >
+            <Card className="card-hover">
+              <CardHeader className="pb-2">
+                <CardTitle>Table {tableNumber}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {tableStudents.map((student, index) => {
+                    const mealStatus = getMealStatus(student);
+                    return (
+                      <motion.div
+                        key={student._id}
+                        custom={index}
+                        variants={studentDotVariants}
+                        className={`w-6 h-6 flex items-center justify-center rounded-full transition-colors duration-200 ${
+                          mealStatus === true
+                              ? 'bg-green-500 text-white hover:bg-green-600' 
+                              : mealStatus === false
+                              ? 'bg-red-500 text-white hover:bg-red-600'
+                              : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+                        }`}
+                        title={`${student.fullName}: ${mealStatus === null ? 'Not checked' : mealStatus ? 'Present' : 'Absent'}`}
+                      >
+                        <span className="text-xs font-medium">
+                          {getFirstNameInitial(student.fullName)}
+                        </span>
+                      </motion.div>
+                    );
+                  })}
                 </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-red-500 mr-1"></div>
-                  <span>
-                    {presence.absent} absent
-                  </span>
-                </div>
-              </div>
-              
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => onOpenTableDetails(tableNumber.toString())}
-              >
-                View Details
-              </Button>
-            </CardContent>
-          </Card>
+                
+                <motion.div 
+                  className="flex justify-between text-sm mb-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
+                    <span>
+                      {presence.present} present
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-red-500 mr-1"></div>
+                    <span>
+                      {presence.absent} absent
+                    </span>
+                  </div>
+                </motion.div>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => onOpenTableDetails(tableNumber.toString())}
+                  >
+                    View Details
+                  </Button>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
         );
       })}
-    </div>
+    </motion.div>
   );
 };
 

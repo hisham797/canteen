@@ -26,12 +26,21 @@ const mealTimes = [
   { id: 'dinner', label: 'Dinner', icon: Utensils },
 ];
 
+type Campus = 'dawa academy' | 'hifz' | 'daiya stafs' | 'ayadi' | 'office stafs';
+
 interface Student {
-  id: string;
-  name: string;
+  _id: string;
+  fullName: string;
   class: string;
   admissionNumber: string;
-  sickReason?: string;
+  campus: string;
+  isAttendanceHidden?: boolean;
+  isSick?: boolean;
+}
+
+interface MealDetails {
+  type: 'present' | 'absent' | 'sick';
+  students: Student[];
 }
 
 interface MealAttendance {
@@ -41,6 +50,7 @@ interface MealAttendance {
   presentStudents: Student[];
   absentStudents: Student[];
   sickStudents: Student[];
+  campusTotals: Record<Campus, number>;
 }
 
 interface AttendanceSummary {
@@ -49,7 +59,11 @@ interface AttendanceSummary {
   lunch: MealAttendance;
   tea: MealAttendance;
   dinner: MealAttendance;
+  totalSick: number;
+  sickStudents: Student[];
 }
+
+const AVAILABLE_CAMPUSES: Campus[] = ['dawa academy', 'hifz', 'daiya stafs', 'ayadi', 'office stafs'];
 
 const getFirstLetter = (name: string) => {
   return name.charAt(0).toUpperCase();
@@ -72,8 +86,7 @@ const Tables = () => {
   const [hideReason, setHideReason] = useState('');
   const [isReasonDialogOpen, setIsReasonDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [showSickStudents, setShowSickStudents] = useState(false);
-  const [selectedType, setSelectedType] = useState<'present' | 'absent' | 'sick'>('present');
+  const [selectedCampus, setSelectedCampus] = useState<Campus>(AVAILABLE_CAMPUSES[0]);
 
   useEffect(() => {
     fetchAttendanceSummary();
@@ -90,13 +103,52 @@ const Tables = () => {
       const response = await fetch('/api/attendance');
       if (!response.ok) throw new Error('Failed to fetch attendance data');
       const data = await response.json();
-      setAttendanceSummary(data);
+      
+      // Filter data based on selected campus
+      const filteredData: AttendanceSummary = {
+        coffee: filterMealData(data.coffee),
+        breakfast: filterMealData(data.breakfast),
+        lunch: filterMealData(data.lunch),
+        tea: filterMealData(data.tea),
+        dinner: filterMealData(data.dinner),
+        totalSick: data.totalSick,
+        sickStudents: data.sickStudents
+      };
+      
+      setAttendanceSummary(filteredData);
     } catch (error) {
       console.error('Error fetching attendance:', error);
       toast.error('Failed to load attendance data');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const filterMealData = (mealData: any) => {
+    if (!mealData) return null;
+    
+    return {
+      ...mealData,
+      presentStudents: mealData.presentStudents.filter((student: Student) => student.campus === selectedCampus),
+      absentStudents: mealData.absentStudents.filter((student: Student) => student.campus === selectedCampus),
+      present: mealData.presentStudents.filter((student: Student) => student.campus === selectedCampus).length,
+      absent: mealData.absentStudents.filter((student: Student) => student.campus === selectedCampus).length,
+      campusTotals: mealData.campusTotals
+    };
+  };
+
+  // Update useEffect to refetch when campus changes
+  useEffect(() => {
+    fetchAttendanceSummary();
+  }, [selectedCampus]);
+
+  // Remove the getFilteredAttendanceSummary function since we're now filtering in fetchAttendanceSummary
+  const filteredAttendanceSummary = attendanceSummary;
+
+  // Update the getTotalSickStudents function
+  const getTotalSickStudents = () => {
+    if (!attendanceSummary) return 0;
+    return attendanceSummary.totalSick;
   };
 
   const handleOpenTableDetails = (tableId: string) => {
@@ -203,9 +255,28 @@ const Tables = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
+        {/* Campus Selection Bar */}
+        <div className="mb-8">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-full">
+            {AVAILABLE_CAMPUSES.map(campus => (
+              <button
+                key={campus}
+                className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
+                  selectedCampus === campus
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+                onClick={() => setSelectedCampus(campus)}
+              >
+                {campus}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Canteen Tables</h1>
+            <h1 className="text-3xl font-bold mb-2">{selectedCampus} Campus</h1>
             <p className="text-gray-600">
               {isDataHidden ? 'Attendance data is currently hidden' : 'View all tables and their current attendance status'}
             </p>
@@ -275,7 +346,7 @@ const Tables = () => {
         ) : (
           <>
             {/* Attendance Summary Boxes */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className={`grid gap-4 mb-6 ${selectedCampus === 'dawa academy' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
               {/* Present Students Summary */}
               <Card className="bg-green-50 border-green-200">
                 <CardContent className="pt-6">
@@ -287,8 +358,11 @@ const Tables = () => {
                   ) : (
                     <div className="grid grid-cols-5 gap-2">
                       {mealTimes.map((meal) => {
-                        const presentCount = attendanceSummary?.[meal.id as keyof AttendanceSummary]?.present || 0;
-                        const presentStudents = attendanceSummary?.[meal.id as keyof AttendanceSummary]?.presentStudents || [];
+                        const mealData = filteredAttendanceSummary?.[meal.id as keyof Omit<AttendanceSummary, 'totalSick' | 'sickStudents'>];
+                        const presentCount = mealData?.present || 0;
+                        const presentStudents = mealData?.presentStudents || [];
+                        const campusTotal = mealData?.campusTotals?.[selectedCampus] || 0;
+                        
                         return (
                           <div
                             key={`present-${meal.id}`}
@@ -300,6 +374,7 @@ const Tables = () => {
                               {presentCount}
                             </Badge>
                             <span className="text-xs mt-1">{meal.label}</span>
+                            
                           </div>
                         );
                       })}
@@ -308,55 +383,59 @@ const Tables = () => {
                 </CardContent>
               </Card>
 
-              <Card className={`${showSickStudents ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'}`}>
+              {/* Sick Students Summary - Only show for Dawa Academy */}
+              {selectedCampus === 'dawa academy' && (
+                <Card className="bg-yellow-50 border-yellow-200">
+                  <CardContent className="pt-6">
+                    <h3 className="font-medium text-lg mb-3">Sick Students</h3>
+                    {isLoading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-yellow-600" />
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <div className="text-4xl font-bold text-yellow-600 mb-2">
+                          {getTotalSickStudents()}
+                        </div>
+                        <p className="text-sm text-yellow-700">Total Sick Students</p>
+                        <Button 
+                          variant="ghost" 
+                          className="mt-4 text-yellow-700 hover:text-yellow-800 hover:bg-yellow-100"
+                          onClick={() => {
+                            handleMealClick('All Meals', 'sick', attendanceSummary?.sickStudents || []);
+                          }}
+                        >
+                          View All Sick Students
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Absent Students Summary */}
+              <Card className="bg-red-50 border-red-200">
                 <CardContent className="pt-6">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-medium text-lg">
-                      {showSickStudents ? 'Sick Students' : 'Absent Students'}
-                    </h3>
-                    <div className="flex items-center space-x-2">
-                      <Label htmlFor="show-sick" className="text-sm">Show Sick</Label>
-                      <Switch
-                        id="show-sick"
-                        checked={showSickStudents}
-                        onCheckedChange={setShowSickStudents}
-                        className={`data-[state=checked]:bg-yellow-600 ${!showSickStudents ? 'bg-red-600' : ''}`}
-                      />
-                    </div>
-                  </div>
+                  <h3 className="font-medium text-lg mb-3">Absent Students</h3>
                   {isLoading ? (
                     <div className="flex items-center justify-center py-4">
-                      <Loader2 className={`h-6 w-6 animate-spin ${showSickStudents ? 'text-yellow-600' : 'text-red-600'}`} />
+                      <Loader2 className="h-6 w-6 animate-spin text-red-600" />
                     </div>
                   ) : (
                     <div className="grid grid-cols-5 gap-2">
                       {mealTimes.map((meal) => {
-                        const count = showSickStudents 
-                          ? attendanceSummary?.[meal.id as keyof AttendanceSummary]?.sick || 0
-                          : (attendanceSummary?.[meal.id as keyof AttendanceSummary]?.absent || 0) + 
-                            (attendanceSummary?.[meal.id as keyof AttendanceSummary]?.sick || 0);
-                        const students = showSickStudents
-                          ? attendanceSummary?.[meal.id as keyof AttendanceSummary]?.sickStudents || []
-                          : [
-                              ...(attendanceSummary?.[meal.id as keyof AttendanceSummary]?.absentStudents || []),
-                              ...(attendanceSummary?.[meal.id as keyof AttendanceSummary]?.sickStudents || [])
-                            ];
+                        const mealData = filteredAttendanceSummary?.[meal.id as keyof Omit<AttendanceSummary, 'totalSick' | 'sickStudents'>];
+                        const absentCount = mealData?.absent || 0;
+                        const absentStudents = mealData?.absentStudents || [];
                         return (
                           <div
-                            key={`${showSickStudents ? 'sick' : 'absent'}-${meal.id}`}
-                            className={`flex flex-col items-center p-2 rounded-lg cursor-pointer transition-colors ${
-                              showSickStudents 
-                                ? 'hover:bg-yellow-100' + (selectedMeal === meal.id ? ' bg-yellow-200' : '')
-                                : 'hover:bg-red-100' + (selectedMeal === meal.id ? ' bg-red-200' : '')
-                            }`}
-                            onClick={() => handleMealClick(meal.label, showSickStudents ? 'sick' : 'absent', students)}
+                            key={`absent-${meal.id}`}
+                            className={`flex flex-col items-center p-2 rounded-lg cursor-pointer hover:bg-red-100 transition-colors ${selectedMeal === meal.id ? 'bg-red-200' : ''}`}
+                            onClick={() => handleMealClick(meal.label, 'absent', absentStudents)}
                           >
-                            <meal.icon className={`h-5 w-5 ${showSickStudents ? 'text-yellow-600' : 'text-red-600'} mb-1`} />
-                            <Badge 
-                              variant="secondary" 
-                              className={`${showSickStudents ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}
-                            >
-                              {count}
+                            <meal.icon className="h-5 w-5 text-red-600 mb-1" />
+                            <Badge variant="secondary" className="bg-red-100 text-red-800">
+                              {absentCount}
                             </Badge>
                             <span className="text-xs mt-1">{meal.label}</span>
                           </div>
@@ -370,7 +449,7 @@ const Tables = () => {
           </>
         )}
 
-        <TableGrid onOpenTableDetails={handleOpenTableDetails} selectedMeal={selectedMeal} />
+        <TableGrid onOpenTableDetails={handleOpenTableDetails} selectedMeal={selectedMeal} selectedCampus={selectedCampus} />
         <TableModal
           tableId={selectedTableId ? parseInt(selectedTableId) : null}
           isOpen={isModalOpen}
@@ -382,40 +461,51 @@ const Tables = () => {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>
-                {selectedMealDetails?.meal} - {selectedMealDetails?.type === 'present' ? 'Present' : 'Absent'} Students
+                {selectedMealDetails?.meal} - {selectedMealDetails?.type === 'present' ? 'Present' : selectedMealDetails?.type === 'sick' ? 'Sick' : 'Absent'} Students
               </DialogTitle>
             </DialogHeader>
             <ScrollArea className="h-[300px] pr-4">
               <div className="space-y-2">
-                {selectedMealDetails?.students.map((student) => (
+                {selectedMealDetails?.students.map((student, index) => (
                   <div
-                    key={student.id}
+                    key={student._id}
                     className={`p-3 rounded-lg border ${
                       selectedMealDetails.type === 'present' 
-                        ? 'bg-green-50' 
+                        ? 'border-green-200 bg-green-50 hover:bg-green-100' 
                         : selectedMealDetails.type === 'sick'
-                        ? 'bg-yellow-50'
-                        : 'bg-red-50'
-                    }`}
+                        ? 'border-yellow-200 bg-yellow-50 hover:bg-yellow-100'
+                        : 'border-red-200 bg-red-50 hover:bg-red-100'
+                    } transition-colors duration-200`}
                   >
-                    <div className="font-medium">{student.name}</div>
-                    <div className='flex flex-row gap-2'>
-                      <div className="text-sm text-gray-600">
-                        Class: {student.class}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          selectedMealDetails.type === 'present'
+                            ? 'bg-green-500'
+                            : selectedMealDetails.type === 'sick'
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
+                        }`} />
+                        <p className="font-medium">{student.fullName}</p>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        Admission No: {student.admissionNumber}
+                      <div className="flex flex-wrap gap-x-2 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <span className="font-medium">Class:</span> {student.class}
+                        </span>
+                        <span className="text-gray-300">•</span>
+                        <span className="flex items-center gap-1">
+                          <span className="font-medium">Admission No:</span> {student.admissionNumber}
+                        </span>
+                        <span className="text-gray-300">•</span>
+                        <span className="flex items-center gap-1">
+                          <span className="font-medium">Campus:</span> {student.campus}
+                        </span>
                       </div>
                     </div>
-                    {selectedMealDetails.type === 'sick' && student.sickReason && (
-                      <div className="mt-2 text-sm text-yellow-700">
-                        Reason: {student.sickReason}
-                      </div>
-                    )}
                   </div>
                 ))}
                 {selectedMealDetails?.students.length === 0 && (
-                  <div className="text-center p-4 text-gray-500">
+                  <div className="text-center p-4 text-gray-500 bg-gray-50 rounded-lg">
                     No students found
                   </div>
                 )}
@@ -466,7 +556,7 @@ const Tables = () => {
               <Button variant="outline" onClick={() => setIsConfirmDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleConfirmShowData} >
+              <Button onClick={handleConfirmShowData}>
                 Show Data
               </Button>
             </DialogFooter>

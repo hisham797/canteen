@@ -45,13 +45,14 @@ export async function PUT(
           throw new Error('Failed to update user');
         }
 
-        if (updateData.admissionNumber || updateData.class) {
+        if (updateData.admissionNumber || updateData.class || updateData.campus) {
           await db.collection("students").updateOne(
             { admissionNumber: currentUser.admissionNumber },
             {
               $set: {
                 admissionNumber: updateData.admissionNumber || currentUser.admissionNumber,
                 class: updateData.class || currentUser.class,
+                campus: updateData.campus || currentUser.campus,
                 firstName: updateData.fullName?.split(' ')[0] || currentUser.firstName,
                 lastName: updateData.fullName?.split(' ')[1] || currentUser.lastName
               }

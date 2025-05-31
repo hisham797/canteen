@@ -17,7 +17,8 @@ interface User {
   admissionNumber: string;
   email: string;
   role: string;
-  class: '8' | 'P1' | 'P2' | 'D1' | 'D2' | 'D3';
+  class: '8' | '9' | 'P1' | 'P2' | 'D1' | 'D2' | 'D3' | 'PG 1';
+  campus: 'Main' | 'PG' | 'Dental';
   attendance: {
     coffee: boolean;
     breakfast: boolean;
@@ -35,14 +36,17 @@ const UsersPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState<string>('all');
+  const [selectedCampus, setSelectedCampus] = useState<string>('all');
   const [newUser, setNewUser] = useState({
     fullName: '',
     admissionNumber: '',
     role: 'student',
     class: '8' as User['class'],
+    campus: 'Main' as User['campus'],
   });
 
-  const AVAILABLE_CLASSES = ['8','9', 'P1', 'P2', 'D1', 'D2', 'D3','PG1'];
+  const AVAILABLE_CLASSES = ['8','9', 'P1', 'P2', 'D1', 'D2', 'D3','PG 1'];
+  const AVAILABLE_CAMPUSES = ['Main', 'PG', 'Dental'];
 
   useEffect(() => {
     fetchUsers();
@@ -62,16 +66,17 @@ const UsersPage = () => {
     }
   };
 
-  // Filter users based on search query and selected class
+  // Filter users based on search query, selected class, and selected campus
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
-    user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.admissionNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.admissionNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.role.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesClass = selectedClass === 'all' || user.class === selectedClass;
+    const matchesCampus = selectedCampus === 'all' || user.campus === selectedCampus;
     
-    return matchesSearch && matchesClass;
+    return matchesSearch && matchesClass && matchesCampus;
   });
 
   const handleEditClick = (user: User) => {
@@ -97,7 +102,8 @@ const UsersPage = () => {
           admissionNumber: selectedUser.admissionNumber,
           email: selectedUser.email,
           role: selectedUser.role,
-          class: selectedUser.class
+          class: selectedUser.class,
+          campus: selectedUser.campus
         }),
       });
 
@@ -150,6 +156,7 @@ const UsersPage = () => {
         admissionNumber: '',
         role: 'student',
         class: '8' as User['class'],
+        campus: 'Main' as User['campus'],
       });
       toast.success('User added successfully');
     } catch (error) {
@@ -187,7 +194,8 @@ const UsersPage = () => {
       'Email': user.email,
       'Admission Number': user.admissionNumber,
       'Role': user.role,
-      'Class': user.class
+      'Class': user.class,
+      'Campus': user.campus
     }));
     
     exportToCSV(exportData, 'users.csv');
@@ -201,7 +209,8 @@ const UsersPage = () => {
       'Email': user.email,
       'Admission Number': user.admissionNumber,
       'Role': user.role,
-      'Class': user.class
+      'Class': user.class,
+      'Campus': user.campus
     }));
     
     exportToPDF(exportData, 'users.pdf', 'Users Report');
@@ -256,6 +265,16 @@ const UsersPage = () => {
                   <option key={cls} value={cls}>{cls}</option>
                 ))}
               </select>
+              <select
+                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={selectedCampus}
+                onChange={(e) => setSelectedCampus(e.target.value)}
+              >
+                <option value="all">All Campuses</option>
+                {AVAILABLE_CAMPUSES.map((campus) => (
+                  <option key={campus} value={campus}>{campus}</option>
+                ))}
+              </select>
             </div>
           </div>
         </CardHeader>
@@ -269,6 +288,7 @@ const UsersPage = () => {
                   <TableHead>Admission Number</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Class</TableHead>
+                  <TableHead>Campus</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -282,6 +302,7 @@ const UsersPage = () => {
                       <TableCell>{user.admissionNumber}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.class}</TableCell>
+                      <TableCell>{user.campus}</TableCell>
                       <TableCell>
                         <span className={
                           user.role === 'admin' 
@@ -371,6 +392,19 @@ const UsersPage = () => {
                 </select>
               </div>
               <div className="space-y-2">
+                <Label htmlFor="campus">Campus</Label>
+                <select
+                  id="campus"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={selectedUser.campus}
+                  onChange={(e) => setSelectedUser({...selectedUser, campus: e.target.value as User['campus']})}
+                >
+                  {AVAILABLE_CAMPUSES.map((campus) => (
+                    <option key={campus} value={campus}>{campus}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
                 <select
                   id="role"
@@ -427,6 +461,19 @@ const UsersPage = () => {
                 <option value="admin">Admin</option>
                 <option value="teacher">Teacher</option>
                 <option value="student">Student</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newCampus">Campus</Label>
+              <select
+                id="newCampus"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={newUser.campus}
+                onChange={(e) => setNewUser({...newUser, campus: e.target.value as User['campus']})}
+              >
+                {AVAILABLE_CAMPUSES.map((campus) => (
+                  <option key={campus} value={campus}>{campus}</option>
+                ))}
               </select>
             </div>
             <div className="space-y-2">

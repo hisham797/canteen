@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
+import { connectToDatabase } from '@/lib/mongodb';
 
 interface Attendance {
   present: boolean;
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
   try {
     const client = await clientPromise;
     const db = client.db("canteen-tracker-app");
-    const { admissionNumber, fullName, email, password } = await request.json();
+    const { admissionNumber, fullName, email, password, campus } = await request.json();
 
     // First check if the admission number exists in students collection
     const student = await db.collection("students").findOne({ admissionNumber });
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
       password: hashedPassword,
       role: 'student',
       class: student.class,
+      campus: campus || student.campus || 'Main',
       attendance: defaultAttendance, // Set all attendance to true by default
       isPresent: true, // Set overall presence to true
       createdAt: new Date()
@@ -86,13 +88,14 @@ export async function POST(request: Request) {
 
     const result = await db.collection("users").insertOne(newUser);
     
-    // Also update the student record to sync attendance
+    // Also update the student record to sync attendance and campus
     await db.collection("students").updateOne(
       { admissionNumber },
       { 
         $set: { 
           attendance: defaultAttendance,
-          isPresent: true
+          isPresent: true,
+          campus: campus || student.campus || 'Main'
         }
       }
     );
@@ -132,43 +135,58 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { admissionNumber, attendance } = await request.json();
-    const db = await clientPromise;
-    
-    // Update user attendance
-    const result = await db.db("canteen-tracker-app").collection('users').updateOne(
-      { admissionNumber },
-      { 
-        $set: { 
-          attendance,
-          lastUpdated: new Date()
-        } 
-      }
-    );
+    const { admissionNumber, attendance, isSick, campus } = await request.json();
 
-    if (!result.matchedCount) {
+    if (!admissionNumber) {
+      return NextResponse.json(
+        { error: 'Admission number is required' },
+        { status: 400 }
+      );
+    }
+
+    const client = await clientPromise;
+    const db = client.db("canteen-tracker-app");
+    const updateData: any = {};
+
+    // Update attendance if provided
+    if (attendance) {
+      updateData.attendance = attendance;
+    }
+
+    // Update sick status if provided
+    if (typeof isSick === 'boolean') {
+      updateData.isSick = isSick;
+    }
+
+    // Update campus if provided
+    if (campus) {
+      updateData.campus = campus;
+    }
+
+    // Update both users and students collections
+    const [userResult, studentResult] = await Promise.all([
+      db.collection('users').updateOne(
+        { admissionNumber },
+        { $set: updateData }
+      ),
+      db.collection('students').updateOne(
+        { admissionNumber },
+        { $set: updateData }
+      )
+    ]);
+
+    if (userResult.matchedCount === 0) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
 
-    // Also update the student's attendance
-    await db.db("canteen-tracker-app").collection('students').updateOne(
-      { admissionNumber },
-      { 
-        $set: { 
-          attendance,
-          lastUpdated: new Date()
-        } 
-      }
-    );
-
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating attendance:', error);
+    console.error('Error updating user:', error);
     return NextResponse.json(
-      { error: 'Failed to update attendance' },
+      { error: 'Failed to update user' },
       { status: 500 }
     );
   }
