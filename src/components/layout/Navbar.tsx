@@ -185,15 +185,13 @@ const Navbar = () => {
               Tables
             </Link>
             <Link href="/messages" className="text-gray-700 hover:text-canteen-blue block px-3 py-2 rounded-md text-base font-medium">
-              <MessageSquare className="inline-block mr-1 w-4 h-4" />
               Messages
             </Link>
 
             {/* Campus Links in Mobile Menu */}
             <div className="px-3 py-2">
               <div className="text-gray-700 font-medium mb-2 flex items-center">
-                <Building2 className="inline-block mr-1 w-4 h-4" />
-                Campuses
+                <span className='text-gray-700 hover:text-canteen-blue px-3 py-2 rounded-md text-sm font-medium'>Campus</span>
               </div>
               <div className="pl-4 space-y-1">
                 {campuses.map((campus) => (
