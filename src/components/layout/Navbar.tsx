@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Menu, X, UserRound, LogOut, Settings, MessageSquare } from 'lucide-react';
+import { Menu, X, UserRound, LogOut, Settings, MessageSquare, Building2 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   DropdownMenu,
@@ -14,6 +14,14 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+
+const campuses = [
+  { id: 'dawa', name: 'Dawa Academy' },
+  { id: 'hifz', name: 'Hifz' },
+  { id: 'daiya-stafs', name: 'Daiya Staffs' },
+  { id: 'ayadi', name: 'Ayadi' },
+  { id: 'office-stafs', name: 'Office Staffs' },
+];
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -70,12 +78,33 @@ const Navbar = () => {
             <Link href="/overview" className="text-gray-700 hover:text-canteen-blue px-3 py-2 rounded-md text-sm font-medium">
               Overview
             </Link>
-            <Link href="/tables" className="text-gray-700 hover:text-canteen-blue px-3 py-2 rounded-md text-sm font-medium">
+            {/* <Link href="/tables" className="text-gray-700 hover:text-canteen-blue px-3 py-2 rounded-md text-sm font-medium">
               Tables
-            </Link>
+            </Link> */}
             <Link href="/messages" className="text-gray-700 hover:text-canteen-blue px-3 py-2 rounded-md text-sm font-medium">
               Messages
             </Link>
+
+            {/* Campus Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                {/* <Butt className="flex items-center gap-2"> */}
+                  
+                  <span className='text-gray-700 hover:text-canteen-blue px-3 py-2 rounded-md text-sm font-medium'>Campus</span>
+                {/* </Butt> */}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {campuses.map((campus) => (
+                  <DropdownMenuItem
+                    key={campus.id}
+                    onClick={() => router.push(`/${campus.id}`)}
+                    className="cursor-pointer"
+                  >
+                    {campus.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             {user ? (
               <DropdownMenu>
@@ -159,6 +188,25 @@ const Navbar = () => {
               <MessageSquare className="inline-block mr-1 w-4 h-4" />
               Messages
             </Link>
+
+            {/* Campus Links in Mobile Menu */}
+            <div className="px-3 py-2">
+              <div className="text-gray-700 font-medium mb-2 flex items-center">
+                <Building2 className="inline-block mr-1 w-4 h-4" />
+                Campuses
+              </div>
+              <div className="pl-4 space-y-1">
+                {campuses.map((campus) => (
+                  <Link
+                    key={campus.id}
+                    href={`/${campus.id}`}
+                    className="text-gray-600 hover:text-canteen-blue block py-1 rounded-md text-sm"
+                  >
+                    {campus.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
             
             {user ? (
               <>

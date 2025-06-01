@@ -1,99 +1,107 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { Prisma } from '@prisma/client';
+import { MongoClient } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
-export async function POST(req: Request) {
+// MongoDB connection string
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/canteen-tracker-app';
+
+// Generate a random 6-digit OTP
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Connect to MongoDB
+async function connectToDatabase() {
   try {
-    const { passkey } = await req.json();
-
-    if (!passkey || typeof passkey !== 'string' || passkey.length !== 6) {
-      return NextResponse.json(
-        { error: 'Invalid passkey format. Must be a 6-digit string.' },
-        { status: 400 }
-      );
-    }
-
-    // Validate that passkey contains only numbers
-    if (!/^\d{6}$/.test(passkey)) {
-      return NextResponse.json(
-        { error: 'Passkey must contain only numbers' },
-        { status: 400 }
-      );
-    }
-
-    try {
-      // Update or insert the passkey in settings
-      const result = await db.settings.upsert({
-        where: { key: 'admin_passkey' },
-        update: {
-          value: passkey,
-          updatedAt: new Date()
-        },
-        create: {
-          key: 'admin_passkey',
-          value: passkey,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      });
-
-      if (!result) {
-        throw new Error('Failed to store passkey in database');
-      }
-
-      return NextResponse.json({ 
-        success: true,
-        message: 'Passkey stored successfully',
-        passkey: result.value
-      });
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      if (dbError instanceof Prisma.PrismaClientKnownRequestError) {
-        return NextResponse.json(
-          { error: 'Database operation failed', details: dbError.message },
-          { status: 500 }
-        );
-      }
-      throw dbError;
-    }
+    const client = await MongoClient.connect(MONGODB_URI);
+    const db = client.db('canteen-tracker-app');
+    return { client, db };
   } catch (error) {
-    console.error('Error storing passkey:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to store passkey',
-        details: error instanceof Error ? error.message : 'Unknown error'
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+}
+
+export async function POST() {
+  let client;
+  try {
+    const { client: mongoClient, db } = await connectToDatabase();
+    client = mongoClient;
+    
+    // Generate new OTP
+    const passkey = generateOTP();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+    
+    // Store in settings collection
+    await db.collection('settings').updateOne(
+      { type: 'passkey' },
+      {
+        $set: {
+          passkey,
+          expiresAt,
+          createdAt: new Date(),
+          isActive: true
+        }
       },
+      { upsert: true }
+    );
+
+    return NextResponse.json({ 
+      success: true, 
+      passkey,
+      expiresAt 
+    });
+  } catch (error) {
+    console.error('Error generating passkey:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to generate passkey' },
       { status: 500 }
     );
+  } finally {
+    if (client) {
+      await client.close();
+    }
   }
 }
 
 export async function GET() {
+  let client;
   try {
-    const settings = await db.settings.findUnique({
-      where: { key: 'admin_passkey' }
-    });
-
+    const { client: mongoClient, db } = await connectToDatabase();
+    client = mongoClient;
+    
+    const settings = await db.collection('settings').findOne({ type: 'passkey' });
+    
     if (!settings) {
-      return NextResponse.json(
-        { error: 'No passkey found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No passkey found' 
+      }, { status: 404 });
+    }
+
+    // Check if passkey is expired
+    if (new Date() > new Date(settings.expiresAt)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Passkey expired' 
+      }, { status: 400 });
     }
 
     return NextResponse.json({ 
-      success: true,
-      passkey: settings.value,
-      updatedAt: settings.updatedAt
+      success: true, 
+      passkey: settings.passkey,
+      expiresAt: settings.expiresAt,
+      isActive: settings.isActive
     });
   } catch (error) {
     console.error('Error fetching passkey:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to fetch passkey',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { success: false, error: 'Failed to fetch passkey' },
       { status: 500 }
     );
+  } finally {
+    if (client) {
+      await client.close();
+    }
   }
 } 

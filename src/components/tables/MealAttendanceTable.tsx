@@ -60,7 +60,6 @@ const MealAttendanceTable: React.FC<MealAttendanceTableProps> = ({
                     </div>
                   </th>
                 ))}
-                <th className="text-center py-3 px-4 font-medium">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -72,7 +71,6 @@ const MealAttendanceTable: React.FC<MealAttendanceTableProps> = ({
                   tea: attendanceSummary?.tea?.campusTotals[campus] || 0,
                   dinner: attendanceSummary?.dinner?.campusTotals[campus] || 0
                 };
-                const total = Object.values(campusTotals).reduce((sum, count) => sum + count, 0);
 
                 return (
                   <tr key={campus} className="border-b hover:bg-gray-50">
@@ -88,13 +86,8 @@ const MealAttendanceTable: React.FC<MealAttendanceTableProps> = ({
                         }`}>
                           {campusTotals[meal.id as keyof typeof campusTotals]}
                         </Badge>
-                      </td>
+                      </td> 
                     ))}
-                    <td className="text-center py-3 px-4">
-                      <Badge variant="secondary" className="bg-gray-100 text-gray-700 font-bold">
-                        {total}
-                      </Badge>
-                    </td>
                   </tr>
                 );
               })}
@@ -117,16 +110,6 @@ const MealAttendanceTable: React.FC<MealAttendanceTableProps> = ({
                     </td>
                   );
                 })}
-                <td className="text-center py-3 px-4">
-                  <Badge variant="secondary" className="bg-gray-200 text-gray-800">
-                    {Object.values(attendanceSummary || {}).reduce((sum, mealData: any) => {
-                      if (mealData && typeof mealData === 'object' && 'campusTotals' in mealData) {
-                        return sum + Object.values(mealData.campusTotals).reduce((mealSum: number, count: any) => mealSum + (Number(count) || 0), 0);
-                      }
-                      return sum;
-                    }, 0)}
-                  </Badge>
-                </td>
               </tr>
             </tbody>
           </table>

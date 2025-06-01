@@ -243,7 +243,7 @@ const Overview = () => {
                   <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
                     <div>
                       <h4 className="font-medium text-yellow-800">Total Sick Students</h4>
-                      <p className="text-sm text-yellow-600">Across all campuses</p>
+                      <p className="text-sm text-yellow-600">Across dawa campus</p>
                     </div>
                     <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-lg px-4 py-2">
                       {attendanceSummary?.totalSick || 0}
